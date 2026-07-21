@@ -20,7 +20,16 @@ const backgroundMusic = $("backgroundMusic");
 backgroundMusic.volume = .22;
 
 function show(id){screens.forEach(x=>$(x).classList.toggle("active",x===id));window.scrollTo({top:0,behavior:"smooth"});}
-function speak(text){if(!soundOn||!("speechSynthesis" in window))return;speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="he-IL";u.rate=.88;u.pitch=1.12;speechSynthesis.speak(u);}
+function speak(text,onDone){
+  let finished=false,timer;
+  const done=()=>{if(finished)return;finished=true;clearTimeout(timer);if(onDone)onDone();};
+  if(!soundOn||!("speechSynthesis" in window)){timer=setTimeout(done,850);return;}
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="he-IL";u.rate=.88;u.pitch=1.12;u.onend=done;u.onerror=done;
+  timer=setTimeout(done,Math.max(3000,text.length*220));
+  speechSynthesis.speak(u);
+}
 function shuffle(a){const result=[...a];for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]];}return result;}
 
 function refillAdditionDeck(){
@@ -77,7 +86,7 @@ function loadStage(){
 }
 function answer(n,btn){
   if(locked)return;
-  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");speak("יש! תשובה נהדרת!");setTimeout(showSuccess,1050);
+  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");speak("יש! תשובה נהדרת! האוכל נאסף!",()=>setTimeout(showSuccess,250));
   }else{btn.classList.add("wrong");$("feedback").textContent="כמעט! נסו שוב — נועה מאמינה בכם 💗";$("feedback").className="feedback try";speak("כמעט! נסו שוב");setTimeout(()=>btn.classList.remove("wrong"),500);}
 }
 function showSuccess(){const a=animals[stage],shtuz=pickShtuz(a);$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=shtuz;$("nextBtn").innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";show("success");speak(`כל הכבוד! ${shtuz}`);}
