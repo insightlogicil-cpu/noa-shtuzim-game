@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#ee5a96" />
+  <meta name="description" content="משחק המשימות של נועה נסיכת השטוזים בחוות השטוזים בחולון" />
+  <title>נועה נסיכת השטוזים | חוות השטוזים</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Rubik:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="sky-decor" aria-hidden="true"><span>☁️</span><span>☁️</span><span>✨</span><span>🌈</span></div>
+  <main class="app-shell">
+    <header class="topbar">
+      <img class="mini-logo" src="noa-logo.jpg" alt="הלוגו של נועה נסיכת השטוזים" />
+      <div class="brand-copy"><strong>חוות השטוזים</strong><span>חוויה מצחיקה בחולון</span></div>
+      <div class="audio-controls">
+        <button id="musicBtn" class="icon-btn" type="button" aria-label="השתקת מוזיקת הרקע" aria-pressed="false" title="מוזיקת רקע">🎵</button>
+        <button id="soundBtn" class="icon-btn" type="button" aria-label="כיבוי הקריינות" aria-pressed="false" title="קריינות">🔊</button>
+      </div>
+    </header>
+
+    <section id="welcome" class="screen welcome-screen active">
+      <div class="welcome-art">
+        <div class="spark s1">✦</div><div class="spark s2">✦</div>
+        <img src="noa-logo.jpg" alt="נועה נסיכת השטוזים" />
+      </div>
+      <div class="welcome-copy">
+        <span class="eyebrow">משחק משימות חדש</span>
+        <h1>ברוכים הבאים<br><em>לחוות השטוזים!</em></h1>
+        <p>עזרו לנועה לאסוף אוכל, לפתור תרגילים ולהאכיל את כל 10 החיות.</p>
+        <button id="startBtn" class="primary-btn" type="button">יוצאים למשימה <span>←</span></button>
+        <small>מתאים לגילאי 4–7 · ללא פרסומות</small>
+      </div>
+    </section>
+
+    <section id="game" class="screen game-screen" aria-live="polite">
+      <div class="game-head">
+        <div>
+          <span id="stageLabel" class="eyebrow">תחנה 1 מתוך 10</span>
+          <h2 id="animalTitle">מי מחכה לנועה?</h2>
+        </div>
+        <div class="score-pill"><span>⭐</span><strong id="score">0</strong><small>כוכבים</small></div>
+      </div>
+      <div class="progress-wrap" aria-label="התקדמות במשחק"><div id="progressBar" class="progress-bar"></div></div>
+      <div class="game-grid">
+        <article class="farm-card">
+          <div class="farm-scene">
+            <div class="sun">☀️</div><div class="barn">🏠</div>
+            <div id="animalEmoji" class="animal" aria-hidden="true">🐴</div>
+            <div id="foodEmoji" class="food-basket" aria-hidden="true">🥕</div>
+            <div class="grass">🌼🌱🌷🌱🌼</div>
+          </div>
+          <p id="animalHint" class="animal-hint">הסוס מחכה לאוכל!</p>
+        </article>
+
+        <article id="challengeCard" class="challenge-card">
+          <div class="challenge-icon">🧺</div>
+          <span id="questionType" class="question-type">אוספים אוכל</span>
+          <h3 id="questionText">כמה זה 2 ועוד 3?</h3>
+          <div id="countingVisual" class="counting-visual" aria-hidden="true"></div>
+          <div id="answers" class="answers"></div>
+          <p id="feedback" class="feedback" role="status"></p>
+        </article>
+      </div>
+    </section>
+
+    <section id="success" class="screen success-screen" aria-live="assertive">
+      <div class="confetti" aria-hidden="true">✦ 🎉 ✦</div>
+      <div id="successAnimal" class="success-animal">🐴</div>
+      <span class="eyebrow">כל הכבוד!</span>
+      <h2 id="successTitle">האוכל הגיע לסוס!</h2>
+      <div class="shtuz-card"><span>שטוז!</span><p id="shtuzText"></p></div>
+      <button id="nextBtn" class="primary-btn" type="button">לחיה הבאה <span>←</span></button>
+    </section>
+
+    <section id="finish" class="screen finish-screen">
+      <div class="finish-stars">⭐ ✨ ⭐</div>
+      <img src="noa-logo.jpg" alt="נועה נסיכת השטוזים" />
+      <span class="eyebrow">המשימה הושלמה!</span>
+      <h2>אלופי חוות השטוזים</h2>
+      <p>האכלתם את כל החיות ואספתם <strong>10 כוכבים!</strong></p>
+      <div id="animalParade" class="animal-parade" aria-label="כל החיות שהואכלו"></div>
+      <button id="restartBtn" class="primary-btn" type="button">משחקים שוב ↻</button>
+    </section>
+  </main>
+  <footer>נועה נסיכת השטוזים · משחק לימודי באהבה 💗</footer>
+  <audio id="backgroundMusic" src="noa-background-music.mp3" loop preload="auto"></audio>
+  <script src="game.js"></script>
+</body>
+</html>
