@@ -48,7 +48,8 @@ function speak(text,onDone){
   const u=new SpeechSynthesisUtterance(prepareSpeech(text));
   const hebrewVoice=speechSynthesis.getVoices().find(voice=>voice.lang.toLowerCase().startsWith("he"));
   if(hebrewVoice)u.voice=hebrewVoice;
-  u.lang="he-IL";u.rate=.84;u.pitch=1.08;u.onend=done;u.onerror=done;
+  const isMobileSpeech=window.matchMedia("(pointer: coarse)").matches||window.innerWidth<=780;
+  u.lang="he-IL";u.rate=isMobileSpeech?.70:.84;u.pitch=1.08;u.onend=done;u.onerror=done;
   timer=setTimeout(done,Math.min(6500,Math.max(3000,text.length*140)));
   speechSynthesis.speak(u);
 }
