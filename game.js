@@ -49,7 +49,7 @@ function speak(text,onDone){
   const hebrewVoice=speechSynthesis.getVoices().find(voice=>voice.lang.toLowerCase().startsWith("he"));
   if(hebrewVoice)u.voice=hebrewVoice;
   u.lang="he-IL";u.rate=.84;u.pitch=1.08;u.onend=done;u.onerror=done;
-  timer=setTimeout(done,Math.max(3000,text.length*220));
+  timer=setTimeout(done,Math.min(6500,Math.max(3000,text.length*140)));
   speechSynthesis.speak(u);
 }
 function shuffle(a){const result=[...a];for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]];}return result;}
@@ -116,9 +116,8 @@ function answer(n,btn){
 function showSuccess(){const a=animals[stage],shtuz=pickShtuz(a);$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=shtuz;$("nextBtn").innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";show("success");speak(`${narration.wellDone} ${shtuz}`);}
 function next(){stage++;if(stage>=animals.length){$("animalParade").textContent=animals.map(a=>a.emoji).join(" ");show("finish");speak(narration.finish);}else loadStage();}
 function startMusic(){if(musicOn){backgroundMusic.play().catch(()=>{});}}
-$("startBtn").addEventListener("click",()=>{stage=0;startMusic();loadStage();});
+$("startBtn").addEventListener("click",()=>{stage=0;startMusic();speak(narration.welcome,()=>setTimeout(loadStage,250));});
 $("nextBtn").addEventListener("click",next);
 $("restartBtn").addEventListener("click",()=>{stage=0;startMusic();loadStage();});
 $("soundBtn").addEventListener("click",()=>{soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";$("soundBtn").setAttribute("aria-pressed",String(!soundOn));if(!soundOn&&"speechSynthesis" in window)speechSynthesis.cancel();});
 $("musicBtn").addEventListener("click",()=>{musicOn=!musicOn;$("musicBtn").textContent="🎵";$("musicBtn").style.opacity=musicOn?"1":".42";$("musicBtn").setAttribute("aria-pressed",String(!musicOn));$("musicBtn").setAttribute("aria-label",musicOn?"השתקת מוזיקת הרקע":"הפעלת מוזיקת הרקע");if(musicOn)startMusic();else backgroundMusic.pause();});
-window.addEventListener("load",()=>setTimeout(()=>speak(narration.welcome),700));
