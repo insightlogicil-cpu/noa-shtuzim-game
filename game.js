@@ -14,10 +14,30 @@ const animals = [
 const $ = id => document.getElementById(id);
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
+let currentQuestionSpeech = "";
 const lastShtuz = new Map();
 const screens = ["welcome","game","success","finish"];
 const backgroundMusic = $("backgroundMusic");
 backgroundMusic.volume = .22;
+
+const numberSpeech=["אֶפֶס","אַחַת","שְׁתַּיִם","שָׁלוֹשׁ","אַרְבַּע","חָמֵשׁ","שֵׁשׁ","שֶׁבַע","שְׁמוֹנֶה","תֵּשַׁע","עֶשֶׂר","אַחַת עֶשְׂרֵה","שְׁתֵּים עֶשְׂרֵה","שְׁלוֹשׁ עֶשְׂרֵה","אַרְבַּע עֶשְׂרֵה","חֲמֵשׁ עֶשְׂרֵה","שֵׁשׁ עֶשְׂרֵה","שְׁבַע עֶשְׂרֵה","שְׁמוֹנֶה עֶשְׂרֵה","תְּשַׁע עֶשְׂרֵה","עֶשְׂרִים"];
+const narration={
+  welcome:"יָאלְלָה נוֹעָה, יוֹצְאִים לְהַרְפַּתְקָה בְּחַוַּת הַשְּׁטוּזִים!",
+  counting:"כַּמָּה פְּרִיטִים יֵשׁ כָּאן?",
+  correct:"יֵשׁ! תְּשׁוּבָה נֶהֱדֶרֶת! הָאֹכֶל נֶאֱסַף!",
+  wrong:"כִּמְעַט! נַסּוּ שׁוּב.",
+  wellDone:"כָּל הַכָּבוֹד!",
+  finish:"אֵיזֶה יֹפִי! הֶאֱכַלְתֶּם אֶת כָּל הַחַיּוֹת בְּחַוַּת הַשְּׁטוּזִים!"
+};
+const speechReplacements=new Map([
+  ["הסוס","הַסּוּס"],["החמור","הַחֲמוֹר"],["התרנגולת","הַתַּרְנְגֹלֶת"],["הפרה","הַפָּרָה"],["הכבשה","הַכִּבְשָׂה"],
+  ["העז","הָעֵז"],["הארנב","הָאַרְנָב"],["החזיר","הַחֲזִיר"],["הברווז","הַבַּרְוָז"],["החתול","הֶחָתוּל"],
+  ["גלידה","גְּלִידָה"],["מעלית","מַעֲלִית"],["אורווה","אֻרְוָה"],["מטרייה","מִטְרִיָּה"],["ספרייה","סִפְרִיָּה"],
+  ["קולנוע","קוֹלְנוֹעַ"],["מספרה","מִסְפָּרָה"],["אופניים","אוֹפַנַּיִם"],["מסעדה","מִסְעָדָה"],["משקפיים","מִשְׁקָפַיִם"],
+  ["מאפייה","מַאֲפִיָּה"],["מכולת","מַכֹּלֶת"],["מקרר","מְקָרֵר"],["בטלפון","בַּטֵּלֵפוֹן"]
+]);
+
+function prepareSpeech(text){let prepared=text;for(const [plain,pointed] of speechReplacements)prepared=prepared.replaceAll(plain,pointed);return prepared;}
 
 function show(id){screens.forEach(x=>$(x).classList.toggle("active",x===id));window.scrollTo({top:0,behavior:"smooth"});}
 function speak(text,onDone){
@@ -25,8 +45,10 @@ function speak(text,onDone){
   const done=()=>{if(finished)return;finished=true;clearTimeout(timer);if(onDone)onDone();};
   if(!soundOn||!("speechSynthesis" in window)){timer=setTimeout(done,850);return;}
   speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang="he-IL";u.rate=.88;u.pitch=1.12;u.onend=done;u.onerror=done;
+  const u=new SpeechSynthesisUtterance(prepareSpeech(text));
+  const hebrewVoice=speechSynthesis.getVoices().find(voice=>voice.lang.toLowerCase().startsWith("he"));
+  if(hebrewVoice)u.voice=hebrewVoice;
+  u.lang="he-IL";u.rate=.84;u.pitch=1.08;u.onend=done;u.onerror=done;
   timer=setTimeout(done,Math.max(3000,text.length*220));
   speechSynthesis.speak(u);
 }
@@ -59,6 +81,7 @@ function makeQuestion(){
   const isCounting=stage%2===1;
   if(isCounting){
     const question=nextCounting();currentAnswer=question.count;
+    currentQuestionSpeech=narration.counting;
     $("questionType").textContent="סופרים עד 20";
     $("questionText").textContent="כמה פריטים יש כאן?";
     $("countingVisual").replaceChildren(...Array.from({length:currentAnswer},()=>{
@@ -69,6 +92,7 @@ function makeQuestion(){
     }));
   }else{
     const question=nextAddition();currentAnswer=question.a+question.b;
+    currentQuestionSpeech=`כַּמָּה זֶה ${numberSpeech[question.a]} וְעוֹד ${numberSpeech[question.b]}?`;
     $("questionType").textContent="חיבור עד 10";
     $("questionText").textContent=`כמה זה ${question.a} ועוד ${question.b}?`;
     $("countingVisual").textContent="";
@@ -76,7 +100,7 @@ function makeQuestion(){
   $("answers").innerHTML="";
   makeChoices(currentAnswer).forEach(n=>{const b=document.createElement("button");b.className="answer-btn";b.type="button";b.textContent=n;b.addEventListener("click",()=>answer(n,b));$("answers").appendChild(b);});
   $("feedback").textContent="";$("feedback").className="feedback";
-  setTimeout(()=>speak($("questionText").textContent),350);
+  setTimeout(()=>speak(currentQuestionSpeech),350);
 }
 function loadStage(){
   locked=false;const a=animals[stage];show("game");
@@ -86,14 +110,15 @@ function loadStage(){
 }
 function answer(n,btn){
   if(locked)return;
-  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");speak("יש! תשובה נהדרת! האוכל נאסף!",()=>setTimeout(showSuccess,250));
-  }else{btn.classList.add("wrong");$("feedback").textContent="כמעט! נסו שוב — נועה מאמינה בכם 💗";$("feedback").className="feedback try";speak("כמעט! נסו שוב");setTimeout(()=>btn.classList.remove("wrong"),500);}
+  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");speak(narration.correct,()=>setTimeout(showSuccess,250));
+  }else{btn.classList.add("wrong");$("feedback").textContent="כמעט! נסו שוב — נועה מאמינה בכם 💗";$("feedback").className="feedback try";speak(narration.wrong);setTimeout(()=>btn.classList.remove("wrong"),500);}
 }
-function showSuccess(){const a=animals[stage],shtuz=pickShtuz(a);$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=shtuz;$("nextBtn").innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";show("success");speak(`כל הכבוד! ${shtuz}`);}
-function next(){stage++;if(stage>=animals.length){$("animalParade").textContent=animals.map(a=>a.emoji).join(" ");show("finish");speak("איזה יופי! האכלתם את כל החיות בחוות השטוזים!");}else loadStage();}
+function showSuccess(){const a=animals[stage],shtuz=pickShtuz(a);$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=shtuz;$("nextBtn").innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";show("success");speak(`${narration.wellDone} ${shtuz}`);}
+function next(){stage++;if(stage>=animals.length){$("animalParade").textContent=animals.map(a=>a.emoji).join(" ");show("finish");speak(narration.finish);}else loadStage();}
 function startMusic(){if(musicOn){backgroundMusic.play().catch(()=>{});}}
 $("startBtn").addEventListener("click",()=>{stage=0;startMusic();loadStage();});
 $("nextBtn").addEventListener("click",next);
 $("restartBtn").addEventListener("click",()=>{stage=0;startMusic();loadStage();});
 $("soundBtn").addEventListener("click",()=>{soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";$("soundBtn").setAttribute("aria-pressed",String(!soundOn));if(!soundOn&&"speechSynthesis" in window)speechSynthesis.cancel();});
 $("musicBtn").addEventListener("click",()=>{musicOn=!musicOn;$("musicBtn").textContent="🎵";$("musicBtn").style.opacity=musicOn?"1":".42";$("musicBtn").setAttribute("aria-pressed",String(!musicOn));$("musicBtn").setAttribute("aria-label",musicOn?"השתקת מוזיקת הרקע":"הפעלת מוזיקת הרקע");if(musicOn)startMusic();else backgroundMusic.pause();});
+window.addEventListener("load",()=>setTimeout(()=>speak(narration.welcome),700));
