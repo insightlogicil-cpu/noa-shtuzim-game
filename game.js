@@ -52,7 +52,12 @@ function makeQuestion(){
     const question=nextCounting();currentAnswer=question.count;
     $("questionType").textContent="סופרים עד 20";
     $("questionText").textContent="כמה פריטים יש כאן?";
-    $("countingVisual").textContent=question.icon.repeat(currentAnswer);
+    $("countingVisual").replaceChildren(...Array.from({length:currentAnswer},()=>{
+      const item=document.createElement("span");
+      item.className="counting-item";
+      item.textContent=question.icon;
+      return item;
+    }));
   }else{
     const question=nextAddition();currentAnswer=question.a+question.b;
     $("questionType").textContent="חיבור עד 10";
