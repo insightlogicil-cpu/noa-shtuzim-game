@@ -10,3 +10,7 @@ button{font:inherit}.sky-decor{position:fixed;inset:0;pointer-events:none;overfl
 footer{text-align:center;position:relative;z-index:1;padding:10px 15px 20px;color:#875f83;font-size:13px}
 @media(max-width:780px){.app-shell{width:100%;min-height:100vh;margin:0;border-radius:0;border:0}.topbar{height:72px;padding:8px 16px}.mini-logo{width:54px;height:54px}.brand-copy strong{font-size:17px}.screen{padding:28px 20px;min-height:calc(100vh - 72px)}.welcome-screen{flex-direction:column;padding-top:18px;text-align:center;gap:16px}.welcome-art img{width:min(280px,74vw)}.welcome-art:before{width:90%}.welcome-copy h1{font-size:42px;margin:10px}.welcome-copy p{font-size:17px;margin:10px auto 16px}.game-head h2{font-size:23px}.score-pill{padding:7px 11px}.game-grid{grid-template-columns:1fr}.farm-scene{height:245px}.barn{font-size:75px;top:67px}.animal{font-size:110px}.challenge-card{padding:23px}.challenge-card h3{font-size:27px}.answers{margin-top:12px}.success-animal{font-size:120px}.success-screen h2,.finish-screen h2{font-size:30px}.shtuz-card p{font-size:19px}.sky-decor,footer{display:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Each counting item has its own grid cell, so no item can wrap out of view. */
+.counting-visual{width:min(100%,410px);min-height:42px;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:5px;align-items:center;justify-items:center;direction:ltr;letter-spacing:0;max-width:410px}
+.counting-item{display:block;font-size:clamp(20px,2.2vw,29px);line-height:1.2}
