@@ -12,7 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-24";
+const ASSET_VERSION = "20260808-25";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -22,6 +22,7 @@ const recordedAudioCache = new Map();
 const lastShtuz = new Map();
 const screens = ["welcome","game","success","finish"];
 const backgroundMusic = $("backgroundMusic");
+const narrationPlayer = $("narrationPlayer");
 const isMobileDevice = window.matchMedia("(pointer: coarse)").matches || window.innerWidth <= 780;
 const normalMusicVolume = 1;
 backgroundMusic.volume = normalMusicVolume;
@@ -55,9 +56,8 @@ function cacheRecordedAudio(file){
   if(!recordedAudioCache.has(file)){
     const folder=file.startsWith("success-shtuz-")?"success-shtuz-mp3":"audio-mp3";
     const url=`assets/${folder}/${file}?v=${ASSET_VERSION}`;
-    const directAudio=new Audio(url);directAudio.preload="auto";directAudio.load();
-    const entry={audio:directAudio,ready:false,promise:null};
-    entry.promise=fetch(url).then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.blob();}).then(blob=>new Promise(resolve=>{const audio=new Audio(URL.createObjectURL(blob));audio.preload="auto";let settled=false;const finish=()=>{if(settled)return;settled=true;entry.audio=audio;entry.ready=true;resolve(audio);};audio.addEventListener("canplaythrough",finish,{once:true});audio.addEventListener("loadeddata",finish,{once:true});audio.load();if(audio.readyState>=2)finish();setTimeout(finish,3000);})).catch(()=>directAudio);
+    const entry={url,blobUrl:null,ready:false,promise:null};
+    entry.promise=fetch(url).then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.blob();}).then(blob=>{entry.blobUrl=URL.createObjectURL(blob);entry.ready=true;return entry.blobUrl;}).catch(()=>url);
     recordedAudioCache.set(file,entry);
   }
   return recordedAudioCache.get(file);
@@ -86,7 +86,7 @@ function playRecorded(file,fallbackText,onDone,onStarted){
   stopRecordedAudio(false);
   backgroundMusic.pause();
   timer=setTimeout(done,60000);
-  audio=cacheRecordedAudio(file).audio;if(audio.readyState>0&&audio.currentTime>0)audio.currentTime=0;currentRecordedAudio=audio;audio.onended=done;audio.onerror=done;const playback=audio.play();if(playback)playback.then(()=>{if(onStarted)onStarted();}).catch(done);else if(onStarted)onStarted();
+  const entry=cacheRecordedAudio(file);audio=narrationPlayer;audio.pause();audio.src=entry.blobUrl||entry.url;audio.load();currentRecordedAudio=audio;audio.onended=done;audio.onerror=done;const playback=audio.play();if(playback)playback.then(()=>{if(onStarted)onStarted();}).catch(done);else if(onStarted)onStarted();
 }
 function playWelcome(onDone){
   const options=Array.from({length:8},(_,i)=>i).filter(i=>i!==lastWelcomeIndex);
