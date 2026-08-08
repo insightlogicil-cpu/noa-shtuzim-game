@@ -12,7 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-19";
+const ASSET_VERSION = "20260808-20";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -54,12 +54,11 @@ function stopRecordedAudio(){
 function cacheRecordedAudio(file){
   if(!recordedAudioCache.has(file)){
     const folder=file.startsWith("success-shtuz-")?"success-shtuz-mp3":"audio-mp3";
-    const request=fetch(`assets/${folder}/${file}?v=${ASSET_VERSION}`).then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.blob();}).then(blob=>URL.createObjectURL(blob)).catch(error=>{recordedAudioCache.delete(file);throw error;});
-    recordedAudioCache.set(file,request);
+    const audio=new Audio(`assets/${folder}/${file}?v=${ASSET_VERSION}`);audio.preload="auto";audio.load();recordedAudioCache.set(file,audio);
   }
   return recordedAudioCache.get(file);
 }
-function preloadRecordedAudio(...files){files.forEach(file=>cacheRecordedAudio(file).catch(()=>{}));}
+function preloadRecordedAudio(...files){files.forEach(cacheRecordedAudio);}
 function speak(text,onDone){
   let finished=false,timer;
   const done=()=>{if(finished)return;finished=true;clearTimeout(timer);resumeBackgroundMusic();if(onDone)onDone();};
@@ -75,15 +74,15 @@ function speak(text,onDone){
   timer=setTimeout(done,Math.min(6500,Math.max(3000,text.length*140)));
   speechSynthesis.speak(u);
 }
-function playRecorded(file,fallbackText,onDone){
+function playRecorded(file,fallbackText,onDone,onStarted){
   let finished=false,timer,audio=null;
   const done=()=>{if(finished)return;finished=true;clearTimeout(timer);stopRecordedAudio();if(onDone)onDone();};
-  if(!soundOn){timer=setTimeout(done,500);return;}
+  if(!soundOn){if(onStarted)onStarted();timer=setTimeout(done,500);return;}
   if("speechSynthesis" in window)speechSynthesis.cancel();
   stopRecordedAudio();
   backgroundMusic.pause();
   timer=setTimeout(done,60000);
-  cacheRecordedAudio(file).then(url=>{if(finished)return;audio=new Audio(url);currentRecordedAudio=audio;audio.onended=done;audio.onerror=done;audio.play().catch(done);}).catch(done);
+  audio=cacheRecordedAudio(file);audio.currentTime=0;currentRecordedAudio=audio;audio.onended=done;audio.onerror=done;const playback=audio.play();if(playback)playback.then(()=>{if(onStarted)onStarted();}).catch(done);else if(onStarted)onStarted();
 }
 function playWelcome(onDone){
   const options=Array.from({length:8},(_,i)=>i).filter(i=>i!==lastWelcomeIndex);
@@ -149,7 +148,7 @@ function loadStage(){
 }
 function answer(n,btn){
   if(locked)return;
-  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");playRecorded(`success-shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz);setTimeout(showSuccess,5900);
+  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");let successShown=false;const revealSuccess=()=>{if(successShown)return;successShown=true;showSuccess();};playRecorded(`success-shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz,null,()=>setTimeout(revealSuccess,5900));setTimeout(revealSuccess,12000);
   }else{btn.classList.add("wrong");$("feedback").textContent="כמעט, נסי שוב 💗";$("feedback").className="feedback try";playRecorded("voice-04.mp3",narration.wrong);setTimeout(()=>btn.classList.remove("wrong"),500);}
 }
 function showSuccess(){const a=animals[stage],nextButton=$("nextBtn");$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=currentShtuz;nextButton.innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";nextButton.disabled=false;show("success");}
