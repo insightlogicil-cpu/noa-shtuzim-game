@@ -12,7 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-22";
+const ASSET_VERSION = "20260808-23";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -54,7 +54,11 @@ function stopRecordedAudio(restoreMusic=true){
 function cacheRecordedAudio(file){
   if(!recordedAudioCache.has(file)){
     const folder=file.startsWith("success-shtuz-")?"success-shtuz-mp3":"audio-mp3";
-    const audio=new Audio(`assets/${folder}/${file}?v=${ASSET_VERSION}`);audio.preload="auto";audio.load();recordedAudioCache.set(file,audio);
+    const url=`assets/${folder}/${file}?v=${ASSET_VERSION}`;
+    const directAudio=new Audio(url);directAudio.preload="auto";directAudio.load();
+    const entry={audio:directAudio,ready:false,promise:null};
+    entry.promise=fetch(url).then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.blob();}).then(blob=>{const audio=new Audio(URL.createObjectURL(blob));audio.preload="auto";audio.load();entry.audio=audio;entry.ready=true;return audio;}).catch(()=>directAudio);
+    recordedAudioCache.set(file,entry);
   }
   return recordedAudioCache.get(file);
 }
@@ -82,7 +86,7 @@ function playRecorded(file,fallbackText,onDone,onStarted){
   stopRecordedAudio(false);
   backgroundMusic.pause();
   timer=setTimeout(done,60000);
-  audio=cacheRecordedAudio(file);if(audio.readyState>0&&audio.currentTime>0)audio.currentTime=0;currentRecordedAudio=audio;audio.onended=done;audio.onerror=done;const playback=audio.play();if(playback)playback.then(()=>{if(onStarted)onStarted();}).catch(done);else if(onStarted)onStarted();
+  audio=cacheRecordedAudio(file).audio;if(audio.readyState>0&&audio.currentTime>0)audio.currentTime=0;currentRecordedAudio=audio;audio.onended=done;audio.onerror=done;const playback=audio.play();if(playback)playback.then(()=>{if(onStarted)onStarted();}).catch(done);else if(onStarted)onStarted();
 }
 function playWelcome(onDone){
   const options=Array.from({length:8},(_,i)=>i).filter(i=>i!==lastWelcomeIndex);
@@ -140,11 +144,11 @@ function makeQuestion(){
   speak(currentQuestionSpeech);
 }
 function loadStage(){
-  locked=false;const a=animals[stage];show("game");
-  currentShtuz=pickShtuz(a);currentShtuzNumber=stage*3+a.shtuzim.indexOf(currentShtuz)+1;const audioNumber=String(currentShtuzNumber).padStart(2,"0");preloadRecordedAudio(`success-shtuz-${audioNumber}.mp3`,`shtuz-${audioNumber}.mp3`);
+  locked=true;const a=animals[stage];show("game");
+  currentShtuz=pickShtuz(a);currentShtuzNumber=stage*3+a.shtuzim.indexOf(currentShtuz)+1;const audioNumber=String(currentShtuzNumber).padStart(2,"0"),successFile=`success-shtuz-${audioNumber}.mp3`,successAudio=cacheRecordedAudio(successFile);preloadRecordedAudio(`shtuz-${audioNumber}.mp3`);
   $("stageLabel").textContent=`תחנה ${stage+1} מתוך 10`;$("animalTitle").textContent=`${a.name} מחכה לנועה`;
   $("animalEmoji").textContent=a.emoji;$("foodEmoji").textContent=a.food;$("animalHint").textContent=`ה${a.name} אוהב ${a.foodName}. בואו נאסוף לו אוכל!`;
-  $("score").textContent=stage;$("progressBar").style.width=`${(stage+1)*10}%`;makeQuestion();
+  $("score").textContent=stage;$("progressBar").style.width=`${(stage+1)*10}%`;makeQuestion();const loadingStage=stage,answerButtons=[...document.querySelectorAll(".answer-btn")];answerButtons.forEach(button=>button.disabled=true);$("feedback").textContent="מכינים את הקריינות…";successAudio.promise.finally(()=>{if(stage===loadingStage&&$("game").classList.contains("active")){answerButtons.forEach(button=>button.disabled=false);$("feedback").textContent="";locked=false;}});
 }
 function answer(n,btn){
   if(locked)return;
