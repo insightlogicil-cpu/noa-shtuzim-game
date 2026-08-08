@@ -12,6 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
+const ASSET_VERSION = "20260808-1";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -50,7 +51,7 @@ function stopRecordedAudio(){
 }
 function cacheRecordedAudio(file){
   if(!recordedAudioCache.has(file)){
-    const request=fetch(`assets/audio-mp3/${file}`).then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.blob();}).then(blob=>URL.createObjectURL(blob)).catch(error=>{recordedAudioCache.delete(file);throw error;});
+    const request=fetch(`assets/audio-mp3/${file}?v=${ASSET_VERSION}`).then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.blob();}).then(blob=>URL.createObjectURL(blob)).catch(error=>{recordedAudioCache.delete(file);throw error;});
     recordedAudioCache.set(file,request);
   }
   return recordedAudioCache.get(file);
