@@ -12,7 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-23";
+const ASSET_VERSION = "20260808-24";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -57,7 +57,7 @@ function cacheRecordedAudio(file){
     const url=`assets/${folder}/${file}?v=${ASSET_VERSION}`;
     const directAudio=new Audio(url);directAudio.preload="auto";directAudio.load();
     const entry={audio:directAudio,ready:false,promise:null};
-    entry.promise=fetch(url).then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.blob();}).then(blob=>{const audio=new Audio(URL.createObjectURL(blob));audio.preload="auto";audio.load();entry.audio=audio;entry.ready=true;return audio;}).catch(()=>directAudio);
+    entry.promise=fetch(url).then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.blob();}).then(blob=>new Promise(resolve=>{const audio=new Audio(URL.createObjectURL(blob));audio.preload="auto";let settled=false;const finish=()=>{if(settled)return;settled=true;entry.audio=audio;entry.ready=true;resolve(audio);};audio.addEventListener("canplaythrough",finish,{once:true});audio.addEventListener("loadeddata",finish,{once:true});audio.load();if(audio.readyState>=2)finish();setTimeout(finish,3000);})).catch(()=>directAudio);
     recordedAudioCache.set(file,entry);
   }
   return recordedAudioCache.get(file);
@@ -155,13 +155,13 @@ function answer(n,btn){
   if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");let successShown=false;const revealSuccess=()=>{if(successShown)return;successShown=true;showSuccess();};playRecorded(`success-shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz,null,()=>setTimeout(revealSuccess,5900));setTimeout(revealSuccess,12000);
   }else{btn.classList.add("wrong");$("feedback").textContent="כמעט, נסי שוב 💗";$("feedback").className="feedback try";playRecorded("voice-04.mp3",narration.wrong);setTimeout(()=>btn.classList.remove("wrong"),500);}
 }
-function showSuccess(){const a=animals[stage],nextButton=$("nextBtn");$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=currentShtuz;nextButton.innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";nextButton.disabled=false;show("success");}
+function showSuccess(){const a=animals[stage],nextButton=$("nextBtn"),repeatButton=$("repeatShtuzBtn"),audioNumber=String(currentShtuzNumber).padStart(2,"0");$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=currentShtuz;nextButton.innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";nextButton.disabled=false;repeatButton.disabled=true;repeatButton.textContent="🔊 מכינים את השטוז…";cacheRecordedAudio(`shtuz-${audioNumber}.mp3`).promise.finally(()=>{repeatButton.disabled=false;repeatButton.textContent="🔊 השמעת השטוז שוב";});show("success");}
 function next(){stage++;if(stage>=animals.length){$("animalParade").textContent=animals.map(a=>a.emoji).join(" ");show("finish");playRecorded("voice-06.mp3",narration.finish);}else loadStage();}
 function startMusic(){if(musicOn){backgroundMusic.play().catch(()=>{});}}
 preloadRecordedAudio("voice-04.mp3","voice-06.mp3");
 $("startBtn").addEventListener("click",()=>{stage=0;if("speechSynthesis" in window){const unlock=new SpeechSynthesisUtterance(" ");unlock.volume=0;speechSynthesis.speak(unlock);}playWelcome(()=>setTimeout(()=>{startMusic();loadStage();},250));});
 $("nextBtn").addEventListener("click",next);
-$("repeatShtuzBtn").addEventListener("click",()=>playRecorded(`shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz));
+$("repeatShtuzBtn").addEventListener("click",()=>{const button=$("repeatShtuzBtn");if(button.disabled)return;button.disabled=true;button.textContent="🔊 מנגן את השטוז…";playRecorded(`shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz,()=>{button.disabled=false;button.textContent="🔊 השמעת השטוז שוב";});});
 $("repeatQuestionBtn").addEventListener("click",()=>speak(currentQuestionSpeech));
 $("restartBtn").addEventListener("click",()=>{stage=0;startMusic();loadStage();});
 $("soundBtn").addEventListener("click",()=>{soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";$("soundBtn").setAttribute("aria-pressed",String(!soundOn));if(!soundOn){stopRecordedAudio();if("speechSynthesis" in window)speechSynthesis.cancel();}});
