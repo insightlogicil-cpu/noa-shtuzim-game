@@ -12,7 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-16";
+const ASSET_VERSION = "20260808-17";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -149,7 +149,7 @@ function loadStage(){
 }
 function answer(n,btn){
   if(locked)return;
-  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="כל הכבוד! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");playRecorded(`success-shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz);setTimeout(showSuccess,2300);
+  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");playRecorded(`success-shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz);setTimeout(showSuccess,5900);
   }else{btn.classList.add("wrong");$("feedback").textContent="כמעט! נסי שוב — נועה מאמינה בך 💗";$("feedback").className="feedback try";playRecorded("voice-04.mp3",narration.wrong);setTimeout(()=>btn.classList.remove("wrong"),500);}
 }
 function showSuccess(){const a=animals[stage],nextButton=$("nextBtn");$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=currentShtuz;nextButton.innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";nextButton.disabled=false;show("success");}
