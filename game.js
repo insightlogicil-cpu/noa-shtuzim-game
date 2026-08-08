@@ -12,7 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-18";
+const ASSET_VERSION = "20260808-19";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -82,7 +82,7 @@ function playRecorded(file,fallbackText,onDone){
   if("speechSynthesis" in window)speechSynthesis.cancel();
   stopRecordedAudio();
   backgroundMusic.pause();
-  timer=setTimeout(done,20000);
+  timer=setTimeout(done,60000);
   cacheRecordedAudio(file).then(url=>{if(finished)return;audio=new Audio(url);currentRecordedAudio=audio;audio.onended=done;audio.onerror=done;audio.play().catch(done);}).catch(done);
 }
 function playWelcome(onDone){
