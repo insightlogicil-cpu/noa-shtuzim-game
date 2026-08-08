@@ -12,7 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-1";
+const ASSET_VERSION = "20260808-2";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -101,7 +101,8 @@ function nextAddition(){if(!additionDeck.length)refillAdditionDeck();return addi
 function nextCounting(){if(!countingDeck.length)refillCountingDeck();return countingDeck.pop();}
 function pickShtuz(animal){
   const previous=lastShtuz.get(animal.name);
-  const options=animal.shtuzim.filter(text=>text!==previous);
+  const unavailableShtuz=animal.name==="כבשה"?animal.shtuzim[0]:null;
+  const options=animal.shtuzim.filter(text=>text!==previous&&text!==unavailableShtuz);
   const selected=options[Math.floor(Math.random()*options.length)];
   lastShtuz.set(animal.name,selected);
   return selected;
