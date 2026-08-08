@@ -12,7 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-21";
+const ASSET_VERSION = "20260808-22";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -82,7 +82,7 @@ function playRecorded(file,fallbackText,onDone,onStarted){
   stopRecordedAudio(false);
   backgroundMusic.pause();
   timer=setTimeout(done,60000);
-  audio=cacheRecordedAudio(file);audio.currentTime=0;currentRecordedAudio=audio;audio.onended=done;audio.onerror=done;const playback=audio.play();if(playback)playback.then(()=>{if(onStarted)onStarted();}).catch(done);else if(onStarted)onStarted();
+  audio=cacheRecordedAudio(file);if(audio.readyState>0&&audio.currentTime>0)audio.currentTime=0;currentRecordedAudio=audio;audio.onended=done;audio.onerror=done;const playback=audio.play();if(playback)playback.then(()=>{if(onStarted)onStarted();}).catch(done);else if(onStarted)onStarted();
 }
 function playWelcome(onDone){
   const options=Array.from({length:8},(_,i)=>i).filter(i=>i!==lastWelcomeIndex);
@@ -141,7 +141,7 @@ function makeQuestion(){
 }
 function loadStage(){
   locked=false;const a=animals[stage];show("game");
-  currentShtuz=pickShtuz(a);currentShtuzNumber=stage*3+a.shtuzim.indexOf(currentShtuz)+1;preloadRecordedAudio(`success-shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`);
+  currentShtuz=pickShtuz(a);currentShtuzNumber=stage*3+a.shtuzim.indexOf(currentShtuz)+1;const audioNumber=String(currentShtuzNumber).padStart(2,"0");preloadRecordedAudio(`success-shtuz-${audioNumber}.mp3`,`shtuz-${audioNumber}.mp3`);
   $("stageLabel").textContent=`תחנה ${stage+1} מתוך 10`;$("animalTitle").textContent=`${a.name} מחכה לנועה`;
   $("animalEmoji").textContent=a.emoji;$("foodEmoji").textContent=a.food;$("animalHint").textContent=`ה${a.name} אוהב ${a.foodName}. בואו נאסוף לו אוכל!`;
   $("score").textContent=stage;$("progressBar").style.width=`${(stage+1)*10}%`;makeQuestion();
@@ -157,6 +157,7 @@ function startMusic(){if(musicOn){backgroundMusic.play().catch(()=>{});}}
 preloadRecordedAudio("voice-04.mp3","voice-06.mp3");
 $("startBtn").addEventListener("click",()=>{stage=0;if("speechSynthesis" in window){const unlock=new SpeechSynthesisUtterance(" ");unlock.volume=0;speechSynthesis.speak(unlock);}playWelcome(()=>setTimeout(()=>{startMusic();loadStage();},250));});
 $("nextBtn").addEventListener("click",next);
+$("repeatShtuzBtn").addEventListener("click",()=>playRecorded(`shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz));
 $("repeatQuestionBtn").addEventListener("click",()=>speak(currentQuestionSpeech));
 $("restartBtn").addEventListener("click",()=>{stage=0;startMusic();loadStage();});
 $("soundBtn").addEventListener("click",()=>{soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";$("soundBtn").setAttribute("aria-pressed",String(!soundOn));if(!soundOn){stopRecordedAudio();if("speechSynthesis" in window)speechSynthesis.cancel();}});
