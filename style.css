@@ -15,3 +15,4 @@ footer{text-align:center;position:relative;z-index:1;padding:10px 15px 20px;colo
 .counting-visual{width:min(100%,410px);min-height:42px;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:5px;align-items:center;justify-items:center;direction:ltr;letter-spacing:0;max-width:410px}
 .counting-item{display:block;font-size:clamp(20px,2.2vw,29px);line-height:1.2}
 .primary-btn:disabled{cursor:default;opacity:.58;transform:none;filter:none}
+.repeat-question-btn{border:0;border-radius:999px;background:#eee3f6;color:var(--purple);padding:8px 15px;font-weight:700;cursor:pointer;margin:-5px 0 9px}.repeat-question-btn:active{transform:scale(.97)}
