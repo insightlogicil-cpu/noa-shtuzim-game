@@ -16,6 +16,7 @@ let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
 let currentRecordedAudio = null, lastWelcomeIndex = -1;
+let currentShtuz = "", currentShtuzNumber = 0;
 const recordedAudioCache = new Map();
 const lastShtuz = new Map();
 const screens = ["welcome","game","success","finish"];
@@ -49,7 +50,7 @@ function stopRecordedAudio(){
 }
 function cacheRecordedAudio(file){
   if(!recordedAudioCache.has(file)){
-    const request=fetch(`assets/audio/${file}`).then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.blob();}).then(blob=>URL.createObjectURL(blob)).catch(error=>{recordedAudioCache.delete(file);throw error;});
+    const request=fetch(`assets/audio-mp3/${file}`).then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.blob();}).then(blob=>URL.createObjectURL(blob)).catch(error=>{recordedAudioCache.delete(file);throw error;});
     recordedAudioCache.set(file,request);
   }
   return recordedAudioCache.get(file);
@@ -83,7 +84,7 @@ function playRecorded(file,fallbackText,onDone){
 function playWelcome(onDone){
   const options=Array.from({length:8},(_,i)=>i).filter(i=>i!==lastWelcomeIndex);
   const selected=options[Math.floor(Math.random()*options.length)];lastWelcomeIndex=selected;
-  playRecorded(`voice-01-${String(selected+1).padStart(2,"0")}.wav`,narration.welcome,onDone);
+  playRecorded(`voice-01-${String(selected+1).padStart(2,"0")}.mp3`,narration.welcome,onDone);
 }
 function shuffle(a){const result=[...a];for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]];}return result;}
 
@@ -137,19 +138,20 @@ function makeQuestion(){
 }
 function loadStage(){
   locked=false;const a=animals[stage];show("game");
-  const firstShtuzNumber=stage*3+1;preloadRecordedAudio("voice-03.wav","voice-04.wav","voice-05.wav",...Array.from({length:3},(_,i)=>`shtuz-${String(firstShtuzNumber+i).padStart(2,"0")}.wav`));if(stage===animals.length-1)preloadRecordedAudio("voice-06.wav");
+  currentShtuz=pickShtuz(a);currentShtuzNumber=stage*3+a.shtuzim.indexOf(currentShtuz)+1;preloadRecordedAudio(`shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`);
   $("stageLabel").textContent=`תחנה ${stage+1} מתוך 10`;$("animalTitle").textContent=`${a.name} מחכה לנועה`;
   $("animalEmoji").textContent=a.emoji;$("foodEmoji").textContent=a.food;$("animalHint").textContent=`ה${a.name} אוהב ${a.foodName}. בואו נאסוף לו אוכל!`;
   $("score").textContent=stage;$("progressBar").style.width=`${(stage+1)*10}%`;makeQuestion();
 }
 function answer(n,btn){
   if(locked)return;
-  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");playRecorded("voice-03.wav",narration.correct,()=>setTimeout(showSuccess,250));
-  }else{btn.classList.add("wrong");$("feedback").textContent="כמעט! נסי שוב — נועה מאמינה בך 💗";$("feedback").className="feedback try";playRecorded("voice-04.wav",narration.wrong);setTimeout(()=>btn.classList.remove("wrong"),500);}
+  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");playRecorded("voice-03.mp3",narration.correct,()=>setTimeout(showSuccess,250));
+  }else{btn.classList.add("wrong");$("feedback").textContent="כמעט! נסי שוב — נועה מאמינה בך 💗";$("feedback").className="feedback try";playRecorded("voice-04.mp3",narration.wrong);setTimeout(()=>btn.classList.remove("wrong"),500);}
 }
-function showSuccess(){const a=animals[stage],shtuz=pickShtuz(a),shtuzNumber=stage*3+a.shtuzim.indexOf(shtuz)+1,nextButton=$("nextBtn");$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=shtuz;nextButton.innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";nextButton.disabled=true;show("success");playRecorded("voice-05.wav",narration.wellDone,()=>playRecorded(`shtuz-${String(shtuzNumber).padStart(2,"0")}.wav`,shtuz,()=>{nextButton.disabled=false;}));}
-function next(){stage++;if(stage>=animals.length){$("animalParade").textContent=animals.map(a=>a.emoji).join(" ");show("finish");playRecorded("voice-06.wav",narration.finish);}else loadStage();}
+function showSuccess(){const a=animals[stage],nextButton=$("nextBtn");$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=currentShtuz;nextButton.innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";nextButton.disabled=true;show("success");playRecorded("voice-05.mp3",narration.wellDone,()=>playRecorded(`shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz,()=>{nextButton.disabled=false;}));}
+function next(){stage++;if(stage>=animals.length){$("animalParade").textContent=animals.map(a=>a.emoji).join(" ");show("finish");playRecorded("voice-06.mp3",narration.finish);}else loadStage();}
 function startMusic(){if(musicOn){backgroundMusic.play().catch(()=>{});}}
+preloadRecordedAudio("voice-03.mp3","voice-04.mp3","voice-05.mp3","voice-06.mp3");
 $("startBtn").addEventListener("click",()=>{stage=0;playWelcome(()=>setTimeout(()=>{startMusic();loadStage();},250));});
 $("nextBtn").addEventListener("click",next);
 $("restartBtn").addEventListener("click",()=>{stage=0;startMusic();loadStage();});
