@@ -1,20 +1,21 @@
 const animals = [
-  {name:"סוס",emoji:"🐴",food:"🥕",foodName:"גזר",shtuzim:["הסוס לבש מכנסיים — אבל שכח איפה שמים את הפרסות!","הסוס נכנס למעלית — ולחץ על קומת האורווה!","הסוס ביקש גלידה — בטעם דהרה עם סוכריות!"]},
-  {name:"חמור",emoji:"🫏",food:"🌾",foodName:"שיבולים",shtuzim:["החמור כתב שיר — אי־אה, אי־אה, וזה כל החרוז שהיה!","החמור פתח רדיו — וכל היום שידר אי־אה־אם!","החמור לקח מטרייה — כי ירד גשם של גזרים!"]},
-  {name:"תרנגולת",emoji:"🐔",food:"🌽",foodName:"תירס",shtuzim:["התרנגולת טסה לירח — וחזרה עם ביצת כוכבים!","התרנגולת פתחה מחשב — וחיפשה את מקש הביצה!","התרנגולת הלכה לספרייה — וביקשה ספר עם סוף קוקוריקו!"]},
+  {name:"סוס",emoji:"🐴",food:"🥕",foodName:"גזר",shtuzim:["הסוס לבש מכנסיים — אבל שכח איפה שמים את הפרסות!","הסוס נכנס למעלית — ולחץ על קומת האורווה!","הסוס נעל גלגיליות — כדי לדהור לאט יותר!"]},
+  {name:"חמור",emoji:"🫏",food:"🌾",foodName:"שיבולים",shtuzim:["החמור לבש גרביים — אבל לא מצא זוג שמתאים לארבע רגליים!","החמור נכנס לחנות כובעים — וביקש כובע עם חורים לאוזניים!","החמור לקח מטרייה — כי ירד גשם של גזרים!"]},
+  {name:"תרנגולת",emoji:"🐔",food:"🌽",foodName:"תירס",shtuzim:["התרנגולת טסה לירח — וחזרה עם ביצת כוכבים!","התרנגולת ענדה שעון — כדי לדעת מתי הביצה מוכנה!","התרנגולת הלכה לספרייה — וביקשה ספר עם סוף קוקוריקו!"]},
   {name:"פרה",emoji:"🐄",food:"🌿",foodName:"עשב",shtuzim:["הפרה שתתה שוקו — ואמרה: מוּ־שלם!","הפרה נכנסה לקולנוע — וביקשה כרטיס לסרט מוּ־תח!","הפרה למדה לנגן — והקימה להקת מוּ־זיקה!"]},
-  {name:"כבשה",emoji:"🐑",food:"🍀",foodName:"תלתן",shtuzim:["הכבשה סרגה סוודר — לענן שהיה לו קר!","הכבשה פתחה מספרה — ועשתה לעננים תספורת!","הכבשה שיחקה מחבואים — אבל הצמר הציץ מאחורי העץ!"]},
-  {name:"עז",emoji:"🐐",food:"🥬",foodName:"חסה",shtuzim:["העז עלתה על אופניים — וצלצלה מֶה־מֶה במקום בפעמון!","העז הזמינה פיצה — עם תוספת עלי גג!","העז טיפסה על שעון — כדי לראות איך הזמן עובר!"]},
+  {name:"כבשה",emoji:"🐑",food:"🍀",foodName:"תלתן",shtuzim:["הכבשה סרגה סוודר — לענן שהיה לו קר!","הכבשה פתחה מספרה — ועשתה לעננים תספורת!","הכבשה עלתה על ענן — כדי לבדוק מי גנב לה את הצמר!"]},
+  {name:"עז",emoji:"🐐",food:"🥬",foodName:"חסה",shtuzim:["העז עלתה על אופניים — וצלצלה מֶה־מֶה במקום בפעמון!","העז פתחה חנות נעליים — ומכרה נעלי טיפוס להרים!","העז טיפסה על שעון — כדי לראות איך הזמן עובר!"]},
   {name:"ארנב",emoji:"🐇",food:"🥕",foodName:"גזר",shtuzim:["הארנב פתח מסעדה — וכל התפריט היה גזר בתחפושת!","הארנב איחר לבית הספר — כי קפץ על כל שלולית בדרך!","הארנב קנה משקפיים — כדי לראות את הגזר מקרוב־קרוב!"]},
   {name:"חזיר",emoji:"🐷",food:"🍎",foodName:"תפוח",shtuzim:["החזיר התקלח בבוץ — כדי להיות נקי מלכלוך!","החזיר פתח מאפייה — והכין עוגת בוץ בלי בוץ!","החזיר יצא לרקוד — ועשה סיבובון עם הזנבון!"]},
   {name:"ברווז",emoji:"🦆",food:"🫛",foodName:"אפונים",shtuzim:["הברווז נעל מגפיים — כדי שהשלולית לא תירטב!","הברווז התקשר לחבר — ואמר: הלו־געגע!","הברווז נכנס למכולת — וביקש לחם עם חשבון על המקור!"]},
-  {name:"חתול",emoji:"🐈",food:"🐟",foodName:"דג",shtuzim:["החתול צלצל בפעמון — ומי ענה? עכבר בטלפון!","החתול פתח בית ספר — ולימד מיאו־תמטיקה!","החתול נכנס למקרר — כי רצה להיות חתול מגניב!"]}
+  {name:"חתול",emoji:"🐈",food:"🐟",foodName:"דג",shtuzim:["החתול אפה עוגה — וקישט אותה בקצפת מיאו!","החתול עלה לאוטובוס — וביקש לרדת בתחנת המיאו הבאה!","החתול לבש פיג׳מה — והלך לישון בתוך קופסת נעליים!"]}
 ];
 
 const $ = id => document.getElementById(id);
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
+let currentRecordedAudio = null, lastWelcomeIndex = -1;
 const lastShtuz = new Map();
 const screens = ["welcome","game","success","finish"];
 const backgroundMusic = $("backgroundMusic");
@@ -40,10 +41,16 @@ const speechReplacements=new Map([
 function prepareSpeech(text){let prepared=text;for(const [plain,pointed] of speechReplacements)prepared=prepared.replaceAll(plain,pointed);return prepared;}
 
 function show(id){screens.forEach(x=>$(x).classList.toggle("active",x===id));window.scrollTo({top:0,behavior:"smooth"});}
+function stopRecordedAudio(){
+  if(!currentRecordedAudio)return;
+  currentRecordedAudio.pause();currentRecordedAudio.currentTime=0;currentRecordedAudio=null;
+  backgroundMusic.volume=.22;
+}
 function speak(text,onDone){
   let finished=false,timer;
   const done=()=>{if(finished)return;finished=true;clearTimeout(timer);if(onDone)onDone();};
   if(!soundOn||!("speechSynthesis" in window)){timer=setTimeout(done,850);return;}
+  stopRecordedAudio();
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(prepareSpeech(text));
   const hebrewVoice=speechSynthesis.getVoices().find(voice=>voice.lang.toLowerCase().startsWith("he"));
@@ -52,6 +59,24 @@ function speak(text,onDone){
   u.lang="he-IL";u.rate=isMobileSpeech?.70:.84;u.pitch=1.08;u.onend=done;u.onerror=done;
   timer=setTimeout(done,Math.min(6500,Math.max(3000,text.length*140)));
   speechSynthesis.speak(u);
+}
+function playRecorded(file,fallbackText,onDone){
+  let finished=false,timer;
+  const done=()=>{if(finished)return;finished=true;clearTimeout(timer);stopRecordedAudio();if(onDone)onDone();};
+  if(!soundOn){timer=setTimeout(done,500);return;}
+  if("speechSynthesis" in window)speechSynthesis.cancel();
+  stopRecordedAudio();
+  const audio=new Audio(`assets/audio/${file}`);currentRecordedAudio=audio;backgroundMusic.volume=.08;
+  const fallback=()=>{if(finished)return;finished=true;clearTimeout(timer);if(currentRecordedAudio===audio)currentRecordedAudio=null;backgroundMusic.volume=.22;speak(fallbackText,onDone);};
+  audio.onended=done;
+  audio.onerror=fallback;
+  timer=setTimeout(done,15000);
+  audio.play().catch(fallback);
+}
+function playWelcome(onDone){
+  const options=Array.from({length:8},(_,i)=>i).filter(i=>i!==lastWelcomeIndex);
+  const selected=options[Math.floor(Math.random()*options.length)];lastWelcomeIndex=selected;
+  playRecorded(`voice-01-${String(selected+1).padStart(2,"0")}.wav`,narration.welcome,onDone);
 }
 function shuffle(a){const result=[...a];for(let i=result.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[result[i],result[j]]=[result[j],result[i]];}return result;}
 
@@ -111,14 +136,14 @@ function loadStage(){
 }
 function answer(n,btn){
   if(locked)return;
-  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");speak(narration.correct,()=>setTimeout(showSuccess,250));
-  }else{btn.classList.add("wrong");$("feedback").textContent="כמעט! נסו שוב — נועה מאמינה בכם 💗";$("feedback").className="feedback try";speak(narration.wrong);setTimeout(()=>btn.classList.remove("wrong"),500);}
+  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");playRecorded("voice-03.wav",narration.correct,()=>setTimeout(showSuccess,250));
+  }else{btn.classList.add("wrong");$("feedback").textContent="כמעט! נסי שוב — נועה מאמינה בך 💗";$("feedback").className="feedback try";playRecorded("voice-04.wav",narration.wrong);setTimeout(()=>btn.classList.remove("wrong"),500);}
 }
-function showSuccess(){const a=animals[stage],shtuz=pickShtuz(a);$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=shtuz;$("nextBtn").innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";show("success");speak(`${narration.wellDone} ${shtuz}`);}
-function next(){stage++;if(stage>=animals.length){$("animalParade").textContent=animals.map(a=>a.emoji).join(" ");show("finish");speak(narration.finish);}else loadStage();}
+function showSuccess(){const a=animals[stage],shtuz=pickShtuz(a),shtuzNumber=stage*3+a.shtuzim.indexOf(shtuz)+1;$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=shtuz;$("nextBtn").innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";show("success");playRecorded("voice-05.wav",narration.wellDone,()=>playRecorded(`shtuz-${String(shtuzNumber).padStart(2,"0")}.wav`,shtuz));}
+function next(){stage++;if(stage>=animals.length){$("animalParade").textContent=animals.map(a=>a.emoji).join(" ");show("finish");playRecorded("voice-06.wav",narration.finish);}else loadStage();}
 function startMusic(){if(musicOn){backgroundMusic.play().catch(()=>{});}}
-$("startBtn").addEventListener("click",()=>{stage=0;speak(narration.welcome,()=>setTimeout(()=>{startMusic();loadStage();},250));});
+$("startBtn").addEventListener("click",()=>{stage=0;playWelcome(()=>setTimeout(()=>{startMusic();loadStage();},250));});
 $("nextBtn").addEventListener("click",next);
 $("restartBtn").addEventListener("click",()=>{stage=0;startMusic();loadStage();});
-$("soundBtn").addEventListener("click",()=>{soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";$("soundBtn").setAttribute("aria-pressed",String(!soundOn));if(!soundOn&&"speechSynthesis" in window)speechSynthesis.cancel();});
+$("soundBtn").addEventListener("click",()=>{soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";$("soundBtn").setAttribute("aria-pressed",String(!soundOn));if(!soundOn){stopRecordedAudio();if("speechSynthesis" in window)speechSynthesis.cancel();}});
 $("musicBtn").addEventListener("click",()=>{musicOn=!musicOn;$("musicBtn").textContent="🎵";$("musicBtn").style.opacity=musicOn?"1":".42";$("musicBtn").setAttribute("aria-pressed",String(!musicOn));$("musicBtn").setAttribute("aria-label",musicOn?"השתקת מוזיקת הרקע":"הפעלת מוזיקת הרקע");if(musicOn)startMusic();else backgroundMusic.pause();});
