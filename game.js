@@ -77,9 +77,8 @@ function playRecorded(file,fallbackText,onDone){
   if("speechSynthesis" in window)speechSynthesis.cancel();
   stopRecordedAudio();
   backgroundMusic.volume=.08;
-  const fallback=()=>{if(finished)return;finished=true;clearTimeout(timer);if(currentRecordedAudio===audio)currentRecordedAudio=null;backgroundMusic.volume=.22;speak(fallbackText,onDone);};
-  timer=setTimeout(fallback,20000);
-  cacheRecordedAudio(file).then(url=>{if(finished)return;audio=new Audio(url);currentRecordedAudio=audio;audio.onended=done;audio.onerror=fallback;audio.play().catch(fallback);}).catch(fallback);
+  timer=setTimeout(done,20000);
+  cacheRecordedAudio(file).then(url=>{if(finished)return;audio=new Audio(url);currentRecordedAudio=audio;audio.onended=done;audio.onerror=done;audio.play().catch(done);}).catch(done);
 }
 function playWelcome(onDone){
   const options=Array.from({length:8},(_,i)=>i).filter(i=>i!==lastWelcomeIndex);
