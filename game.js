@@ -12,7 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-20";
+const ASSET_VERSION = "20260808-21";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -47,9 +47,9 @@ function prepareSpeech(text){let prepared=text;for(const [plain,pointed] of spee
 
 function show(id){screens.forEach(x=>$(x).classList.toggle("active",x===id));window.scrollTo({top:0,behavior:"smooth"});}
 function resumeBackgroundMusic(){backgroundMusic.volume=normalMusicVolume;if(musicOn)backgroundMusic.play().catch(()=>{});}
-function stopRecordedAudio(){
+function stopRecordedAudio(restoreMusic=true){
   if(currentRecordedAudio){currentRecordedAudio.pause();currentRecordedAudio.currentTime=0;currentRecordedAudio=null;}
-  resumeBackgroundMusic();
+  if(restoreMusic)resumeBackgroundMusic();
 }
 function cacheRecordedAudio(file){
   if(!recordedAudioCache.has(file)){
@@ -63,7 +63,7 @@ function speak(text,onDone){
   let finished=false,timer;
   const done=()=>{if(finished)return;finished=true;clearTimeout(timer);resumeBackgroundMusic();if(onDone)onDone();};
   if(!soundOn||!("speechSynthesis" in window)){timer=setTimeout(done,850);return;}
-  stopRecordedAudio();
+  stopRecordedAudio(false);
   speechSynthesis.cancel();
   speechSynthesis.resume();
   backgroundMusic.pause();
@@ -79,7 +79,7 @@ function playRecorded(file,fallbackText,onDone,onStarted){
   const done=()=>{if(finished)return;finished=true;clearTimeout(timer);stopRecordedAudio();if(onDone)onDone();};
   if(!soundOn){if(onStarted)onStarted();timer=setTimeout(done,500);return;}
   if("speechSynthesis" in window)speechSynthesis.cancel();
-  stopRecordedAudio();
+  stopRecordedAudio(false);
   backgroundMusic.pause();
   timer=setTimeout(done,60000);
   audio=cacheRecordedAudio(file);audio.currentTime=0;currentRecordedAudio=audio;audio.onended=done;audio.onerror=done;const playback=audio.play();if(playback)playback.then(()=>{if(onStarted)onStarted();}).catch(done);else if(onStarted)onStarted();
