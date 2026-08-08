@@ -12,7 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-25";
+const ASSET_VERSION = "20260808-26";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -161,7 +161,7 @@ function startMusic(){if(musicOn){backgroundMusic.play().catch(()=>{});}}
 preloadRecordedAudio("voice-04.mp3","voice-06.mp3");
 $("startBtn").addEventListener("click",()=>{stage=0;if("speechSynthesis" in window){const unlock=new SpeechSynthesisUtterance(" ");unlock.volume=0;speechSynthesis.speak(unlock);}playWelcome(()=>setTimeout(()=>{startMusic();loadStage();},250));});
 $("nextBtn").addEventListener("click",next);
-$("repeatShtuzBtn").addEventListener("click",()=>{const button=$("repeatShtuzBtn");if(button.disabled)return;button.disabled=true;button.textContent="🔊 מנגן את השטוז…";playRecorded(`shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz,()=>{button.disabled=false;button.textContent="🔊 השמעת השטוז שוב";});});
+$("repeatShtuzBtn").addEventListener("click",()=>{const button=$("repeatShtuzBtn");if(button.disabled)return;button.disabled=true;button.textContent="🔊 מנגן את השטוז…";let unlocked=false;const unlock=()=>{if(unlocked)return;unlocked=true;button.disabled=false;button.textContent="🔊 השמעת השטוז שוב";};playRecorded(`shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz,unlock,()=>setTimeout(unlock,1500));setTimeout(unlock,4000);});
 $("repeatQuestionBtn").addEventListener("click",()=>speak(currentQuestionSpeech));
 $("restartBtn").addEventListener("click",()=>{stage=0;startMusic();loadStage();});
 $("soundBtn").addEventListener("click",()=>{soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";$("soundBtn").setAttribute("aria-pressed",String(!soundOn));if(!soundOn){stopRecordedAudio();if("speechSynthesis" in window)speechSynthesis.cancel();}});
