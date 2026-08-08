@@ -12,7 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-10";
+const ASSET_VERSION = "20260808-11";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -23,8 +23,8 @@ const lastShtuz = new Map();
 const screens = ["welcome","game","success","finish"];
 const backgroundMusic = $("backgroundMusic");
 const isMobileDevice = window.matchMedia("(pointer: coarse)").matches || window.innerWidth <= 780;
-const normalMusicVolume = isMobileDevice ? .07 : .22;
-const narrationMusicVolume = isMobileDevice ? .015 : .08;
+const normalMusicVolume = isMobileDevice ? .025 : .22;
+const narrationMusicVolume = isMobileDevice ? 0 : .08;
 backgroundMusic.volume = normalMusicVolume;
 
 const numberSpeech=["אֶפֶס","אַחַת","שְׁתַּיִם","שָׁלוֹשׁ","אַרְבַּע","חָמֵשׁ","שֵׁשׁ","שֶׁבַע","שְׁמוֹנֶה","תֵּשַׁע","עֶשֶׂר","אַחַת עֶשְׂרֵה","שְׁתֵּים עֶשְׂרֵה","שְׁלוֹשׁ עֶשְׂרֵה","אַרְבַּע עֶשְׂרֵה","חֲמֵשׁ עֶשְׂרֵה","שֵׁשׁ עֶשְׂרֵה","שְׁבַע עֶשְׂרֵה","שְׁמוֹנֶה עֶשְׂרֵה","תְּשַׁע עֶשְׂרֵה","עֶשְׂרִים"];
