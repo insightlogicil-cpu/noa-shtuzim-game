@@ -12,17 +12,19 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-26";
+const ASSET_VERSION = "20260808-27";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
-let currentRecordedAudio = null, lastWelcomeIndex = -1;
+let currentRecordedAudio = null, currentBufferSource = null, playbackGeneration = 0, lastWelcomeIndex = -1;
 let currentShtuz = "", currentShtuzNumber = 0;
 const recordedAudioCache = new Map();
 const lastShtuz = new Map();
 const screens = ["welcome","game","success","finish"];
 const backgroundMusic = $("backgroundMusic");
 const narrationPlayer = $("narrationPlayer");
+const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+let audioContext = null;
 const isMobileDevice = window.matchMedia("(pointer: coarse)").matches || window.innerWidth <= 780;
 const normalMusicVolume = 1;
 backgroundMusic.volume = normalMusicVolume;
@@ -49,15 +51,35 @@ function prepareSpeech(text){let prepared=text;for(const [plain,pointed] of spee
 function show(id){screens.forEach(x=>$(x).classList.toggle("active",x===id));window.scrollTo({top:0,behavior:"smooth"});}
 function resumeBackgroundMusic(){backgroundMusic.volume=normalMusicVolume;if(musicOn)backgroundMusic.play().catch(()=>{});}
 function stopRecordedAudio(restoreMusic=true){
+  playbackGeneration++;
+  if(currentBufferSource){try{currentBufferSource.stop();}catch{}currentBufferSource=null;}
   if(currentRecordedAudio){currentRecordedAudio.pause();currentRecordedAudio.currentTime=0;currentRecordedAudio=null;}
   if(restoreMusic)resumeBackgroundMusic();
 }
+function getAudioContext(){
+  if(!audioContext&&AudioContextClass)audioContext=new AudioContextClass();
+  return audioContext;
+}
+async function unlockAudioContext(){
+  const context=getAudioContext();
+  if(context&&context.state==="suspended")await context.resume();
+  return context;
+}
 function cacheRecordedAudio(file){
   if(!recordedAudioCache.has(file)){
-    const folder=file.startsWith("success-shtuz-")?"success-shtuz-mp3":"audio-mp3";
+    const folder="audio-mp3";
     const url=`assets/${folder}/${file}?v=${ASSET_VERSION}`;
-    const entry={url,blobUrl:null,ready:false,promise:null};
-    entry.promise=fetch(url).then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.blob();}).then(blob=>{entry.blobUrl=URL.createObjectURL(blob);entry.ready=true;return entry.blobUrl;}).catch(()=>url);
+    const entry={url,blobUrl:null,buffer:null,ready:false,error:null,promise:null};
+    entry.promise=fetch(url,{cache:"force-cache"})
+      .then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.arrayBuffer();})
+      .then(async bytes=>{
+        entry.blobUrl=URL.createObjectURL(new Blob([bytes],{type:"audio/mpeg"}));
+        const context=getAudioContext();
+        if(context)entry.buffer=await context.decodeAudioData(bytes.slice(0));
+        entry.ready=true;
+        return entry;
+      })
+      .catch(error=>{entry.error=error;entry.ready=true;return entry;});
     recordedAudioCache.set(file,entry);
   }
   return recordedAudioCache.get(file);
@@ -78,15 +100,42 @@ function speak(text,onDone){
   timer=setTimeout(done,Math.min(6500,Math.max(3000,text.length*140)));
   speechSynthesis.speak(u);
 }
-function playRecorded(file,fallbackText,onDone,onStarted){
-  let finished=false,timer,audio=null;
-  const done=()=>{if(finished)return;finished=true;clearTimeout(timer);stopRecordedAudio();if(onDone)onDone();};
-  if(!soundOn){if(onStarted)onStarted();timer=setTimeout(done,500);return;}
-  if("speechSynthesis" in window)speechSynthesis.cancel();
+async function playRecorded(file,fallbackText,onDone,onStarted){
+  let finished=false,timer;
   stopRecordedAudio(false);
+  const generation=playbackGeneration;
+  const done=()=>{if(finished||generation!==playbackGeneration)return;finished=true;clearTimeout(timer);currentBufferSource=null;currentRecordedAudio=null;resumeBackgroundMusic();if(onDone)onDone();};
+  if(!soundOn){if(onStarted)onStarted();timer=setTimeout(done,500);return;}
+  const contextReady=unlockAudioContext().catch(()=>null);
+  if("speechSynthesis" in window)speechSynthesis.cancel();
   backgroundMusic.pause();
-  timer=setTimeout(done,60000);
-  const entry=cacheRecordedAudio(file);audio=narrationPlayer;audio.pause();audio.src=entry.blobUrl||entry.url;audio.load();currentRecordedAudio=audio;audio.onended=done;audio.onerror=done;const playback=audio.play();if(playback)playback.then(()=>{if(onStarted)onStarted();}).catch(done);else if(onStarted)onStarted();
+  const entry=await cacheRecordedAudio(file).promise;
+  if(generation!==playbackGeneration)return;
+  try{
+    if(entry.buffer){
+      const context=(await contextReady)||await unlockAudioContext();
+      if(generation!==playbackGeneration)return;
+      const source=context.createBufferSource();
+      source.buffer=entry.buffer;
+      source.connect(context.destination);
+      source.onended=done;
+      currentBufferSource=source;
+      source.start(0);
+      timer=setTimeout(done,Math.ceil(entry.buffer.duration*1000)+2500);
+      if(onStarted)onStarted();
+      return;
+    }
+    const audio=narrationPlayer;
+    audio.pause();
+    audio.src=entry.blobUrl||entry.url;
+    audio.currentTime=0;
+    currentRecordedAudio=audio;
+    audio.onended=done;
+    audio.onerror=done;
+    await audio.play();
+    timer=setTimeout(done,20000);
+    if(onStarted)onStarted();
+  }catch{done();}
 }
 function playWelcome(onDone){
   const options=Array.from({length:8},(_,i)=>i).filter(i=>i!==lastWelcomeIndex);
@@ -145,23 +194,25 @@ function makeQuestion(){
 }
 function loadStage(){
   locked=true;const a=animals[stage];show("game");
-  currentShtuz=pickShtuz(a);currentShtuzNumber=stage*3+a.shtuzim.indexOf(currentShtuz)+1;const audioNumber=String(currentShtuzNumber).padStart(2,"0"),successFile=`success-shtuz-${audioNumber}.mp3`,successAudio=cacheRecordedAudio(successFile);preloadRecordedAudio(`shtuz-${audioNumber}.mp3`);
+  currentShtuz=pickShtuz(a);currentShtuzNumber=stage*3+a.shtuzim.indexOf(currentShtuz)+1;const audioNumber=String(currentShtuzNumber).padStart(2,"0"),successAudio=cacheRecordedAudio("voice-03.mp3"),shtuzAudio=cacheRecordedAudio(`shtuz-${audioNumber}.mp3`);
   $("stageLabel").textContent=`תחנה ${stage+1} מתוך 10`;$("animalTitle").textContent=`${a.name} מחכה לנועה`;
   $("animalEmoji").textContent=a.emoji;$("foodEmoji").textContent=a.food;$("animalHint").textContent=`ה${a.name} אוהב ${a.foodName}. בואו נאסוף לו אוכל!`;
-  $("score").textContent=stage;$("progressBar").style.width=`${(stage+1)*10}%`;makeQuestion();const loadingStage=stage,answerButtons=[...document.querySelectorAll(".answer-btn")];answerButtons.forEach(button=>button.disabled=true);$("feedback").textContent="מכינים את הקריינות…";successAudio.promise.finally(()=>{if(stage===loadingStage&&$("game").classList.contains("active")){answerButtons.forEach(button=>button.disabled=false);$("feedback").textContent="";locked=false;}});
+  $("score").textContent=stage;$("progressBar").style.width=`${(stage+1)*10}%`;makeQuestion();const loadingStage=stage,answerButtons=[...document.querySelectorAll(".answer-btn")];answerButtons.forEach(button=>button.disabled=true);$("feedback").textContent="מכינים את הקריינות…";Promise.all([successAudio.promise,shtuzAudio.promise]).finally(()=>{if(stage===loadingStage&&$("game").classList.contains("active")){answerButtons.forEach(button=>button.disabled=false);$("feedback").textContent="";locked=false;}});
 }
 function answer(n,btn){
   if(locked)return;
-  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");let successShown=false;const revealSuccess=()=>{if(successShown)return;successShown=true;showSuccess();};playRecorded(`success-shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz,null,()=>setTimeout(revealSuccess,5900));setTimeout(revealSuccess,12000);
+  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");playRecorded("voice-03.mp3",narration.correct,()=>showSuccess(true));
   }else{btn.classList.add("wrong");$("feedback").textContent="כמעט, נסי שוב 💗";$("feedback").className="feedback try";playRecorded("voice-04.mp3",narration.wrong);setTimeout(()=>btn.classList.remove("wrong"),500);}
 }
-function showSuccess(){const a=animals[stage],nextButton=$("nextBtn"),repeatButton=$("repeatShtuzBtn"),audioNumber=String(currentShtuzNumber).padStart(2,"0");$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=currentShtuz;nextButton.innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";nextButton.disabled=false;repeatButton.disabled=true;repeatButton.textContent="🔊 מכינים את השטוז…";cacheRecordedAudio(`shtuz-${audioNumber}.mp3`).promise.finally(()=>{repeatButton.disabled=false;repeatButton.textContent="🔊 השמעת השטוז שוב";});show("success");}
-function next(){stage++;if(stage>=animals.length){$("animalParade").textContent=animals.map(a=>a.emoji).join(" ");show("finish");playRecorded("voice-06.mp3",narration.finish);}else loadStage();}
+function playCurrentShtuz(){return playRecorded(`shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz);}
+function showSuccess(autoPlay=false){const a=animals[stage],nextButton=$("nextBtn"),repeatButton=$("repeatShtuzBtn"),audioNumber=String(currentShtuzNumber).padStart(2,"0");$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=currentShtuz;nextButton.innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";nextButton.disabled=false;repeatButton.disabled=true;repeatButton.textContent="🔊 מכינים את השטוז…";cacheRecordedAudio(`shtuz-${audioNumber}.mp3`).promise.finally(()=>{repeatButton.disabled=false;repeatButton.textContent="🔊 השמעת השטוז שוב";if(autoPlay&&$("success").classList.contains("active"))playCurrentShtuz();});show("success");}
+function showFinish(){stopRecordedAudio(false);stage=animals.length;$("score").textContent=animals.length;$("progressBar").style.width="100%";$("animalParade").textContent=animals.map(a=>a.emoji).join(" ");show("finish");playRecorded("voice-06.mp3",narration.finish);}
+function next(){if(!$("success").classList.contains("active"))return;$("nextBtn").disabled=true;stopRecordedAudio(false);if(stage===animals.length-1)showFinish();else{stage++;loadStage();}}
 function startMusic(){if(musicOn){backgroundMusic.play().catch(()=>{});}}
-preloadRecordedAudio("voice-04.mp3","voice-06.mp3");
-$("startBtn").addEventListener("click",()=>{stage=0;if("speechSynthesis" in window){const unlock=new SpeechSynthesisUtterance(" ");unlock.volume=0;speechSynthesis.speak(unlock);}playWelcome(()=>setTimeout(()=>{startMusic();loadStage();},250));});
+preloadRecordedAudio("voice-03.mp3","voice-04.mp3","voice-06.mp3");
+$("startBtn").addEventListener("click",()=>{stage=0;unlockAudioContext().catch(()=>{});if("speechSynthesis" in window){const unlock=new SpeechSynthesisUtterance(" ");unlock.volume=0;speechSynthesis.speak(unlock);}playWelcome(()=>setTimeout(()=>{startMusic();loadStage();},250));});
 $("nextBtn").addEventListener("click",next);
-$("repeatShtuzBtn").addEventListener("click",()=>{const button=$("repeatShtuzBtn");if(button.disabled)return;button.disabled=true;button.textContent="🔊 מנגן את השטוז…";let unlocked=false;const unlock=()=>{if(unlocked)return;unlocked=true;button.disabled=false;button.textContent="🔊 השמעת השטוז שוב";};playRecorded(`shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz,unlock,()=>setTimeout(unlock,1500));setTimeout(unlock,4000);});
+$("repeatShtuzBtn").addEventListener("click",()=>{const button=$("repeatShtuzBtn");if(button.disabled)return;button.disabled=true;button.textContent="🔊 מתחיל מחדש…";unlockAudioContext().catch(()=>{});playCurrentShtuz();setTimeout(()=>{button.disabled=false;button.textContent="🔊 השמעת השטוז שוב";},500);});
 $("repeatQuestionBtn").addEventListener("click",()=>speak(currentQuestionSpeech));
 $("restartBtn").addEventListener("click",()=>{stage=0;startMusic();loadStage();});
 $("soundBtn").addEventListener("click",()=>{soundOn=!soundOn;$("soundBtn").textContent=soundOn?"🔊":"🔇";$("soundBtn").setAttribute("aria-pressed",String(!soundOn));if(!soundOn){stopRecordedAudio();if("speechSynthesis" in window)speechSynthesis.cancel();}});
