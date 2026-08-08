@@ -12,7 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-13";
+const ASSET_VERSION = "20260808-14";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -53,7 +53,8 @@ function stopRecordedAudio(){
 }
 function cacheRecordedAudio(file){
   if(!recordedAudioCache.has(file)){
-    const request=fetch(`assets/audio-mp3/${file}?v=${ASSET_VERSION}`).then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.blob();}).then(blob=>URL.createObjectURL(blob)).catch(error=>{recordedAudioCache.delete(file);throw error;});
+    const folder=file.startsWith("success-shtuz-")?"success-shtuz-mp3":"audio-mp3";
+    const request=fetch(`assets/${folder}/${file}?v=${ASSET_VERSION}`).then(response=>{if(!response.ok)throw new Error(`Audio ${response.status}`);return response.blob();}).then(blob=>URL.createObjectURL(blob)).catch(error=>{recordedAudioCache.delete(file);throw error;});
     recordedAudioCache.set(file,request);
   }
   return recordedAudioCache.get(file);
@@ -141,20 +142,20 @@ function makeQuestion(){
 }
 function loadStage(){
   locked=false;const a=animals[stage];show("game");
-  currentShtuz=pickShtuz(a);currentShtuzNumber=stage*3+a.shtuzim.indexOf(currentShtuz)+1;preloadRecordedAudio(`shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`);
+  currentShtuz=pickShtuz(a);currentShtuzNumber=stage*3+a.shtuzim.indexOf(currentShtuz)+1;preloadRecordedAudio(`success-shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`);
   $("stageLabel").textContent=`תחנה ${stage+1} מתוך 10`;$("animalTitle").textContent=`${a.name} מחכה לנועה`;
   $("animalEmoji").textContent=a.emoji;$("foodEmoji").textContent=a.food;$("animalHint").textContent=`ה${a.name} אוהב ${a.foodName}. בואו נאסוף לו אוכל!`;
   $("score").textContent=stage;$("progressBar").style.width=`${(stage+1)*10}%`;makeQuestion();
 }
 function answer(n,btn){
   if(locked)return;
-  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");playRecorded("voice-03.mp3",narration.correct,showSuccess);
+  if(n===currentAnswer){locked=true;btn.classList.add("correct");$("feedback").textContent="יש! תשובה נהדרת! האוכל נאסף 🎉";$("feedback").className="feedback good";$("animalEmoji").classList.add("happy");playRecorded(`success-shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz);setTimeout(showSuccess,1750);
   }else{btn.classList.add("wrong");$("feedback").textContent="כמעט! נסי שוב — נועה מאמינה בך 💗";$("feedback").className="feedback try";playRecorded("voice-04.mp3",narration.wrong);setTimeout(()=>btn.classList.remove("wrong"),500);}
 }
-function showSuccess(){const a=animals[stage],nextButton=$("nextBtn");$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=currentShtuz;nextButton.innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";nextButton.disabled=false;show("success");playRecorded(`shtuz-${String(currentShtuzNumber).padStart(2,"0")}.mp3`,currentShtuz);}
+function showSuccess(){const a=animals[stage],nextButton=$("nextBtn");$("successAnimal").textContent=a.emoji;$("successTitle").textContent=`ה${a.name} קיבל ${a.foodName}!`;$("shtuzText").textContent=currentShtuz;nextButton.innerHTML=stage===animals.length-1?"לחגיגה הגדולה <span>←</span>":"לחיה הבאה <span>←</span>";nextButton.disabled=false;show("success");}
 function next(){stage++;if(stage>=animals.length){$("animalParade").textContent=animals.map(a=>a.emoji).join(" ");show("finish");playRecorded("voice-06.mp3",narration.finish);}else loadStage();}
 function startMusic(){if(musicOn){backgroundMusic.play().catch(()=>{});}}
-preloadRecordedAudio("voice-03.mp3","voice-04.mp3","voice-06.mp3");
+preloadRecordedAudio("voice-04.mp3","voice-06.mp3");
 $("startBtn").addEventListener("click",()=>{stage=0;if("speechSynthesis" in window){const unlock=new SpeechSynthesisUtterance(" ");unlock.volume=0;speechSynthesis.speak(unlock);}playWelcome(()=>setTimeout(()=>{startMusic();loadStage();},250));});
 $("nextBtn").addEventListener("click",next);
 $("repeatQuestionBtn").addEventListener("click",()=>speak(currentQuestionSpeech));
