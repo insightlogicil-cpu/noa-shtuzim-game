@@ -12,7 +12,7 @@ const animals = [
 ];
 
 const $ = id => document.getElementById(id);
-const ASSET_VERSION = "20260808-11";
+const ASSET_VERSION = "20260808-12";
 let stage = 0, soundOn = true, musicOn = true, currentAnswer = 0, locked = false;
 let additionDeck = [], countingDeck = [];
 let currentQuestionSpeech = "";
@@ -23,8 +23,7 @@ const lastShtuz = new Map();
 const screens = ["welcome","game","success","finish"];
 const backgroundMusic = $("backgroundMusic");
 const isMobileDevice = window.matchMedia("(pointer: coarse)").matches || window.innerWidth <= 780;
-const normalMusicVolume = isMobileDevice ? .025 : .22;
-const narrationMusicVolume = isMobileDevice ? 0 : .08;
+const normalMusicVolume = 1;
 backgroundMusic.volume = normalMusicVolume;
 
 const numberSpeech=["אֶפֶס","אַחַת","שְׁתַּיִם","שָׁלוֹשׁ","אַרְבַּע","חָמֵשׁ","שֵׁשׁ","שֶׁבַע","שְׁמוֹנֶה","תֵּשַׁע","עֶשֶׂר","אַחַת עֶשְׂרֵה","שְׁתֵּים עֶשְׂרֵה","שְׁלוֹשׁ עֶשְׂרֵה","אַרְבַּע עֶשְׂרֵה","חֲמֵשׁ עֶשְׂרֵה","שֵׁשׁ עֶשְׂרֵה","שְׁבַע עֶשְׂרֵה","שְׁמוֹנֶה עֶשְׂרֵה","תְּשַׁע עֶשְׂרֵה","עֶשְׂרִים"];
@@ -47,10 +46,10 @@ const speechReplacements=new Map([
 function prepareSpeech(text){let prepared=text;for(const [plain,pointed] of speechReplacements)prepared=prepared.replaceAll(plain,pointed);return prepared;}
 
 function show(id){screens.forEach(x=>$(x).classList.toggle("active",x===id));window.scrollTo({top:0,behavior:"smooth"});}
+function resumeBackgroundMusic(){backgroundMusic.volume=normalMusicVolume;if(musicOn)backgroundMusic.play().catch(()=>{});}
 function stopRecordedAudio(){
-  if(!currentRecordedAudio)return;
-  currentRecordedAudio.pause();currentRecordedAudio.currentTime=0;currentRecordedAudio=null;
-  backgroundMusic.volume=normalMusicVolume;
+  if(currentRecordedAudio){currentRecordedAudio.pause();currentRecordedAudio.currentTime=0;currentRecordedAudio=null;}
+  resumeBackgroundMusic();
 }
 function cacheRecordedAudio(file){
   if(!recordedAudioCache.has(file)){
@@ -62,12 +61,12 @@ function cacheRecordedAudio(file){
 function preloadRecordedAudio(...files){files.forEach(file=>cacheRecordedAudio(file).catch(()=>{}));}
 function speak(text,onDone){
   let finished=false,timer;
-  const done=()=>{if(finished)return;finished=true;clearTimeout(timer);backgroundMusic.volume=normalMusicVolume;if(onDone)onDone();};
+  const done=()=>{if(finished)return;finished=true;clearTimeout(timer);resumeBackgroundMusic();if(onDone)onDone();};
   if(!soundOn||!("speechSynthesis" in window)){timer=setTimeout(done,850);return;}
   stopRecordedAudio();
   speechSynthesis.cancel();
   speechSynthesis.resume();
-  backgroundMusic.volume=narrationMusicVolume;
+  backgroundMusic.pause();
   const u=new SpeechSynthesisUtterance(prepareSpeech(text));
   const hebrewVoice=speechSynthesis.getVoices().find(voice=>voice.lang.toLowerCase().startsWith("he"));
   if(hebrewVoice)u.voice=hebrewVoice;
@@ -81,7 +80,7 @@ function playRecorded(file,fallbackText,onDone){
   if(!soundOn){timer=setTimeout(done,500);return;}
   if("speechSynthesis" in window)speechSynthesis.cancel();
   stopRecordedAudio();
-  backgroundMusic.volume=narrationMusicVolume;
+  backgroundMusic.pause();
   timer=setTimeout(done,20000);
   cacheRecordedAudio(file).then(url=>{if(finished)return;audio=new Audio(url);currentRecordedAudio=audio;audio.onended=done;audio.onerror=done;audio.play().catch(done);}).catch(done);
 }
